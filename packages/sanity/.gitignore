@@ -1,0 +1,5 @@
+node_modules
+
+# Sanity
+.sanity
+dist

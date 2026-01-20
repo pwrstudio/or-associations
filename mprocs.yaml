@@ -1,0 +1,10 @@
+procs:
+  client:
+    cwd: packages/client
+    shell: pnpm dev
+  cms:
+    cwd: packages/sanity
+    shell: pnpm dev
+  check-in:
+    cwd: packages/check-in
+    shell: pnpm dev --port 5174

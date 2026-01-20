@@ -1,0 +1,25 @@
+{
+	"name": "or-associations",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "mprocs",
+		"dev:client": "pnpm --filter client dev",
+		"dev:cms": "pnpm --filter cms dev",
+		"dev:check-in": "pnpm --filter check-in dev",
+		"build": "pnpm --filter client build && pnpm --filter check-in build",
+		"build:client": "pnpm --filter client build",
+		"build:check-in": "pnpm --filter check-in build",
+		"preview": "pnpm --filter client preview",
+		"check": "pnpm --filter client check && pnpm --filter check-in check",
+		"format": "prettier --write .",
+		"lint": "prettier --check . && pnpm --filter client lint",
+		"typegen": "pnpm --filter cms typegen"
+	},
+	"devDependencies": {
+		"mprocs": "^0.8.2",
+		"prettier": "^3.8.0",
+		"prettier-plugin-svelte": "^3.4.1"
+	}
+}
