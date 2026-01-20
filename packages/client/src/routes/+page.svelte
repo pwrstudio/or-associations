@@ -14,20 +14,39 @@
 
 <h1>or-associations</h1>
 
-{#if data.meetingPoint}
-	<section class="meeting-point">
-		<h2>Best Meeting Point</h2>
-		<p class="coordinates">
-			{data.meetingPoint.point.lat.toFixed(4)}, {data.meetingPoint.point.lng.toFixed(4)}
-		</p>
-		<dl>
-			<dt>Total distance</dt>
-			<dd>{data.meetingPoint.totalDistanceKm.toLocaleString()} km</dd>
-			<dt>Average distance</dt>
-			<dd>{data.meetingPoint.averageDistanceKm.toLocaleString()} km</dd>
-			<dt>Members</dt>
-			<dd>{data.meetingPoint.nodeCount}</dd>
-		</dl>
+{#if data.median || data.centroid}
+	<section class="meeting-points">
+		{#if data.median}
+			<div class="meeting-point">
+				<h2>Median (Best Meeting Point)</h2>
+				<p class="coordinates">
+					{data.median.point.lat.toFixed(4)}, {data.median.point.lng.toFixed(4)}
+				</p>
+				<dl>
+					<dt>Total distance</dt>
+					<dd>{data.median.totalDistanceKm.toLocaleString()} km</dd>
+					<dt>Average distance</dt>
+					<dd>{data.median.averageDistanceKm.toLocaleString()} km</dd>
+				</dl>
+			</div>
+		{/if}
+		{#if data.centroid}
+			<div class="meeting-point centroid">
+				<h2>Centroid (Geographic Center)</h2>
+				<p class="coordinates">
+					{data.centroid.point.lat.toFixed(4)}, {data.centroid.point.lng.toFixed(4)}
+				</p>
+				<dl>
+					<dt>Total distance</dt>
+					<dd>{data.centroid.totalDistanceKm.toLocaleString()} km</dd>
+					<dt>Average distance</dt>
+					<dd>{data.centroid.averageDistanceKm.toLocaleString()} km</dd>
+				</dl>
+			</div>
+		{/if}
+		{#if data.nodeCount}
+			<p class="member-count">{data.nodeCount} members</p>
+		{/if}
 	</section>
 {/if}
 
@@ -59,23 +78,41 @@
 		margin-bottom: 2rem;
 	}
 
-	.meeting-point {
+	.meeting-points {
 		margin-bottom: 2rem;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 1rem;
+
+		.member-count {
+			grid-column: 1 / -1;
+			margin: 0;
+			color: #666;
+			font-size: 0.875rem;
+		}
+	}
+
+	.meeting-point {
 		padding: 1rem;
 		background: #f0f0f0;
 		border-radius: 4px;
 
+		&.centroid {
+			background: #e8e8e8;
+		}
+
 		h2 {
 			margin: 0 0 0.5rem;
-			font-size: 1rem;
+			font-size: 0.875rem;
 			text-transform: uppercase;
 			letter-spacing: 0.05em;
 		}
 
 		.coordinates {
-			font-size: 1.25rem;
+			font-size: 1.125rem;
 			font-weight: bold;
 			margin: 0 0 1rem;
+			font-family: monospace;
 		}
 
 		dl {
@@ -83,6 +120,7 @@
 			grid-template-columns: auto 1fr;
 			gap: 0.25rem 1rem;
 			margin: 0;
+			font-size: 0.875rem;
 		}
 
 		dt {

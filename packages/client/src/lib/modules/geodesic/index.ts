@@ -51,7 +51,7 @@ export function totalDistance(center: GeoPoint, points: GeoPoint[]): number {
 /**
  * Calculate the centroid (geographic center) of a set of points
  */
-function centroid(points: GeoPoint[]): GeoPoint {
+export function centroid(points: GeoPoint[]): GeoPoint {
 	if (points.length === 0) {
 		return { lat: 0, lng: 0 };
 	}

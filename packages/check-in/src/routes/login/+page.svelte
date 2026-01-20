@@ -76,17 +76,6 @@
 		margin: 0 auto;
 	}
 
-	h1 {
-		font-size: 1.5rem;
-		margin-bottom: 1rem;
-		font-weight: normal;
-	}
-
-	.intro {
-		margin-bottom: 1.5rem;
-		color: #666;
-	}
-
 	form {
 		display: flex;
 		flex-direction: column;
