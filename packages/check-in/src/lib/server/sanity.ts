@@ -1,5 +1,5 @@
-import { createClient } from '@sanity/client';
-import { SANITY_WRITE_TOKEN } from '$env/static/private';
+import { createClient, type SanityClient } from '@sanity/client';
+import { env } from '$env/dynamic/private';
 import type { Settings, Node } from 'cms/types';
 import bcrypt from 'bcrypt';
 
@@ -7,13 +7,20 @@ const SANITY_PROJECT_ID = '7gehchqh';
 const SANITY_DATASET = 'production';
 const BCRYPT_ROUNDS = 12;
 
-export const sanityClient = createClient({
-	projectId: SANITY_PROJECT_ID,
-	dataset: SANITY_DATASET,
-	apiVersion: '2024-01-01',
-	token: SANITY_WRITE_TOKEN,
-	useCdn: false
-});
+let _sanityClient: SanityClient | null = null;
+
+function getSanityClient(): SanityClient {
+	if (!_sanityClient) {
+		_sanityClient = createClient({
+			projectId: SANITY_PROJECT_ID,
+			dataset: SANITY_DATASET,
+			apiVersion: '2024-01-01',
+			token: env.SANITY_WRITE_TOKEN,
+			useCdn: false
+		});
+	}
+	return _sanityClient;
+}
 
 type AllowedEmail = NonNullable<Settings['allowedEmails']>[number];
 
@@ -24,7 +31,7 @@ export type NodeData = Omit<Node, '_id' | '_type' | '_createdAt' | '_updatedAt' 
  * The anonymousId is used as the document _id to ensure one node per member
  */
 export async function upsertNode(anonymousId: string, data: NodeData): Promise<void> {
-	await sanityClient.createOrReplace({
+	await getSanityClient().createOrReplace({
 		_id: anonymousId,
 		_type: 'node',
 		...data
@@ -36,7 +43,7 @@ export async function upsertNode(anonymousId: string, data: NodeData): Promise<v
  */
 export async function getNode(anonymousId: string): Promise<NodeData | null> {
 	try {
-		return await sanityClient.fetch<NodeData | null>(
+		return await getSanityClient().fetch<NodeData | null>(
 			`*[_type == "node" && _id == $id][0]{ city, region, country, timezone, checkedInAt }`,
 			{ id: anonymousId }
 		);
@@ -47,7 +54,7 @@ export async function getNode(anonymousId: string): Promise<NodeData | null> {
 
 export async function getSettings(): Promise<Settings | null> {
 	try {
-		return await sanityClient.fetch<Settings | null>(
+		return await getSanityClient().fetch<Settings | null>(
 			`*[_type == "settings" && _id == "settings"][0]{ _id, allowedEmails }`
 		);
 	} catch (err) {
@@ -117,7 +124,7 @@ export async function registerPassword(email: string, password: string): Promise
 	const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
 	// Use _key to patch the specific array item
-	await sanityClient
+	await getSanityClient()
 		.patch('settings')
 		.set({ [`allowedEmails[_key=="${entry._key}"].passwordHash`]: passwordHash })
 		.commit();

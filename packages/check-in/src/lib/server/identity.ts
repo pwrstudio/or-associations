@@ -1,12 +1,12 @@
 import { createHmac } from 'crypto';
-import { AUTH_SALT, ANONYMOUS_SALT } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 /**
  * Creates an auth hash for session/authentication.
  * Used to identify the member in the Settings document.
  */
 export function createAuthHash(email: string): string {
-	return createHmac('sha256', AUTH_SALT).update(email.toLowerCase().trim()).digest('hex');
+	return createHmac('sha256', env.AUTH_SALT!).update(email.toLowerCase().trim()).digest('hex');
 }
 
 /**
@@ -15,5 +15,5 @@ export function createAuthHash(email: string): string {
  * This ensures check-in location data remains anonymous.
  */
 export function createAnonymousId(email: string): string {
-	return createHmac('sha256', ANONYMOUS_SALT).update(email.toLowerCase().trim()).digest('hex');
+	return createHmac('sha256', env.ANONYMOUS_SALT!).update(email.toLowerCase().trim()).digest('hex');
 }
