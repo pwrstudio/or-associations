@@ -21,7 +21,7 @@ export type Settings = {
 	_rev: string;
 	allowedEmails?: Array<{
 		email?: string;
-		authHash?: string;
+		passwordHash?: string;
 		_key: string;
 	}>;
 };

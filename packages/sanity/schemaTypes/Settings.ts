@@ -21,22 +21,22 @@ export const Settings = defineType({
 							validation: (Rule) => Rule.required().email()
 						},
 						{
-							name: 'authHash',
-							title: 'Auth Hash',
+							name: 'passwordHash',
+							title: 'Password Hash',
 							type: 'string',
 							readOnly: true,
-							description: 'For authentication (auto-generated on sign up)'
+							description: 'Hashed password (auto-generated on sign up)'
 						}
 					],
 					preview: {
 						select: {
 							email: 'email',
-							authHash: 'authHash'
+							passwordHash: 'passwordHash'
 						},
-						prepare({ email, authHash }) {
+						prepare({ email, passwordHash }) {
 							return {
 								title: email,
-								subtitle: authHash ? 'Registered' : 'Not registered'
+								subtitle: passwordHash ? 'Registered' : 'Not registered'
 							};
 						}
 					}

@@ -74,7 +74,10 @@ export interface ExpandedWork extends Omit<Work, 'artists' | 'media'> {
 	media?: MediaItem[];
 }
 
-export interface ExpandedProject extends Omit<Project, 'artists' | 'slideshow' | 'media' | 'works'> {
+export interface ExpandedProject extends Omit<
+	Project,
+	'artists' | 'slideshow' | 'media' | 'works'
+> {
 	artists?: ArtistRef[];
 	slideshow?: MediaItem[];
 	media?: MediaItem[];
@@ -86,6 +89,9 @@ export interface ExpandedPage extends Omit<Page, 'artists'> {
 }
 
 // Node data subset for client display (excludes internal fields)
-export type NodeData = Pick<Node, 'geopoint' | 'city' | 'region' | 'country' | 'timezone' | 'checkedInAt'> & {
+export type NodeData = Pick<
+	Node,
+	'geopoint' | 'city' | 'region' | 'country' | 'timezone' | 'checkedInAt'
+> & {
 	_id: string;
 };

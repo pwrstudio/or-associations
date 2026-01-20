@@ -1,9 +1,11 @@
 import { createClient } from '@sanity/client';
 import { SANITY_WRITE_TOKEN } from '$env/static/private';
 import type { Settings, Node } from 'cms/types';
+import bcrypt from 'bcrypt';
 
 const SANITY_PROJECT_ID = '7gehchqh';
 const SANITY_DATASET = 'production';
+const BCRYPT_ROUNDS = 12;
 
 export const sanityClient = createClient({
 	projectId: SANITY_PROJECT_ID,
@@ -71,31 +73,52 @@ export async function isEmailAllowed(email: string): Promise<boolean> {
 	return entry !== null;
 }
 
-export async function getAuthHashForEmail(email: string): Promise<string | null> {
+/**
+ * Check if a member has registered (has a password set)
+ */
+export async function isRegistered(email: string): Promise<boolean> {
 	const entry = await findAllowedEmail(email);
-	return entry?.authHash || null;
+	return entry?.passwordHash != null;
 }
 
 /**
- * Register a member's authHash (only authHash stored in Settings, not anonymousId)
+ * Verify a password against the stored hash
  */
-export async function registerAuthHash(email: string, authHash: string): Promise<void> {
+export async function verifyPassword(email: string, password: string): Promise<boolean> {
+	const entry = await findAllowedEmail(email);
+	if (!entry?.passwordHash) {
+		return false;
+	}
+	return bcrypt.compare(password, entry.passwordHash);
+}
+
+/**
+ * Register a member with a password
+ */
+export async function registerPassword(email: string, password: string): Promise<void> {
 	const settings = await getSettings();
 	if (!settings?.allowedEmails) {
 		throw new Error('Settings not found');
 	}
 
 	const normalizedEmail = email.toLowerCase().trim();
-	const index = settings.allowedEmails.findIndex(
+	const entry = settings.allowedEmails.find(
 		(e) => e.email?.toLowerCase().trim() === normalizedEmail
 	);
 
-	if (index === -1) {
+	if (!entry) {
 		throw new Error('Email not in allowed list');
 	}
 
+	if (entry.passwordHash) {
+		throw new Error('Already registered');
+	}
+
+	const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+	// Use _key to patch the specific array item
 	await sanityClient
 		.patch('settings')
-		.set({ [`allowedEmails[${index}].authHash`]: authHash })
+		.set({ [`allowedEmails[_key=="${entry._key}"].passwordHash`]: passwordHash })
 		.commit();
 }

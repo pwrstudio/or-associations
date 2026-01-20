@@ -10,22 +10,13 @@
 </script>
 
 <div class="container">
-	<h1>{isSignUp ? 'Sign Up' : 'Sign In'}</h1>
-
-	<p class="intro">
-		{#if isSignUp}
-			Enter your email address to create an account.
-		{:else}
-			Enter your email address to continue.
-		{/if}
-	</p>
-
 	{#if form?.error}
 		<p class="error">{form.error}</p>
 	{/if}
 
 	<form
 		method="POST"
+		action={isSignUp ? '?/signup' : '?/signin'}
 		use:enhance={() => {
 			loading = true;
 			return async ({ update }) => {
@@ -37,16 +28,35 @@
 		<input
 			type="email"
 			name="email"
-			placeholder="you@example.com"
+			placeholder="Email"
 			value={form?.email ?? ''}
 			required
 			disabled={loading}
+			autocomplete="email"
 		/>
+		<input
+			type="password"
+			name="password"
+			placeholder="Password"
+			required
+			disabled={loading}
+			autocomplete={isSignUp ? 'new-password' : 'current-password'}
+		/>
+		{#if isSignUp}
+			<input
+				type="password"
+				name="confirmPassword"
+				placeholder="Confirm password"
+				required
+				disabled={loading}
+				autocomplete="new-password"
+			/>
+		{/if}
 		<button type="submit" disabled={loading}>
 			{#if loading}
 				{isSignUp ? 'Creating account...' : 'Signing in...'}
 			{:else}
-				Continue
+				{isSignUp ? 'Sign Up' : 'Sign In'}
 			{/if}
 		</button>
 	</form>
@@ -72,23 +82,27 @@
 		font-weight: normal;
 	}
 
+	.intro {
+		margin-bottom: 1.5rem;
+		color: #666;
+	}
+
 	form {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
 	}
 
-	input[type='email'] {
+	input {
 		padding: 1rem;
 		font-size: 1rem;
 		border: 2px solid #ccc;
 		border-radius: 4px;
-		text-align: center;
-	}
 
-	input[type='email']:focus {
-		outline: none;
-		border-color: #000;
+		&:focus {
+			outline: none;
+			border-color: #000;
+		}
 	}
 
 	button {
@@ -99,16 +113,16 @@
 		color: #fff;
 		cursor: pointer;
 		transition: all 0.2s;
-	}
 
-	button:hover:not(:disabled) {
-		background: #fff;
-		color: #000;
-	}
+		&:hover:not(:disabled) {
+			background: #fff;
+			color: #000;
+		}
 
-	button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
 	}
 
 	.error {
@@ -121,10 +135,10 @@
 		font-size: 0.875rem;
 		color: #666;
 		text-align: center;
-	}
 
-	.switch a {
-		color: #000;
-		font-weight: 500;
+		a {
+			color: #000;
+			font-weight: 500;
+		}
 	}
 </style>
