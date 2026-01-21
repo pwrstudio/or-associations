@@ -21,7 +21,9 @@ export interface ExpandedFileAsset extends Pick<SanityFileAsset, '_id' | 'url'> 
 
 // Expanded reference types (when dereferencing with -> in GROQ)
 export interface ArtistRef extends Pick<Artist, '_id' | 'name' | 'slug'> {}
-export interface WorkRef extends Pick<Work, '_id' | 'title' | 'slug'> {}
+export interface WorkRef extends Pick<Work, '_id' | 'title' | 'slug' | 'year'> {}
+export interface ProjectRef extends Pick<Project, '_id' | 'title' | 'slug' | 'category'> {}
+export interface PageRef extends Pick<Page, '_id' | 'title' | 'slug'> {}
 
 // Expanded media types (with dereferenced assets)
 export interface ExpandedImage {
@@ -67,6 +69,9 @@ export type MediaItem = ImageMedia | VideoMedia | AudioMedia | EmbedMedia;
 // Expanded document types (with dereferenced relations from GROQ queries)
 export interface ExpandedArtist extends Omit<Artist, 'profileImage'> {
 	profileImage?: ExpandedImage;
+	works?: WorkRef[];
+	projects?: ProjectRef[];
+	pages?: PageRef[];
 }
 
 export interface ExpandedWork extends Omit<Work, 'artists' | 'media'> {

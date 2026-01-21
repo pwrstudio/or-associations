@@ -1,12 +1,7 @@
 import { loadData } from '$lib/modules/sanity';
 import { nodesQuery } from '$lib/groq';
 import type { NodeData } from '$lib/types';
-import {
-	centroid,
-	geodesicMedian,
-	totalDistance,
-	type GeoPoint
-} from '$lib/modules/geodesic';
+import { centroid, geodesicMedian, totalDistance, type GeoPoint } from '$lib/modules/geodesic';
 
 export async function load() {
 	const nodes = await loadData<NodeData[]>(nodesQuery);

@@ -32,7 +32,24 @@ export const artistBySlugQuery = `
 			...,
 			asset->
 		},
-		bio
+		bio,
+		"works": *[_type == "work" && references(^._id)] | order(year desc, title asc) {
+			_id,
+			title,
+			slug,
+			year
+		},
+		"projects": *[_type == "project" && references(^._id)] | order(dateStart desc, title asc) {
+			_id,
+			title,
+			slug,
+			category
+		},
+		"pages": *[_type == "page" && references(^._id)] | order(title asc) {
+			_id,
+			title,
+			slug
+		}
 	}
 `;
 

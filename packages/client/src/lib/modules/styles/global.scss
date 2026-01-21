@@ -1,0 +1,67 @@
+@use './variables';
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	font-family: var(--font-family-base);
+	font-size: var(--font-size-base);
+	line-height: var(--line-height-base);
+	color: var(--color-text);
+	background-color: var(--color-background);
+}
+
+body {
+	margin: 0;
+	padding: 0;
+}
+
+a {
+	color: var(--color-text);
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+img,
+video {
+	max-width: 100%;
+	height: auto;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	line-height: var(--line-height-tight);
+}
+
+figure {
+	margin: 0;
+}
+
+figcaption {
+	font-size: var(--font-size-sm);
+	opacity: var(--opacity-muted);
+	margin-top: var(--spacing-sm);
+}
+
+ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+dl {
+	margin: 0;
+}
+
+dd {
+	margin: 0;
+}

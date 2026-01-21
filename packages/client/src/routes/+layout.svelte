@@ -1,37 +1,18 @@
 <script lang="ts">
+	import '$lib/modules/styles/global.scss';
+	import Menu from '$lib/components/Menu.svelte';
+
 	let { children } = $props();
 </script>
 
-<nav>
-	<a href="/">Home</a>
-	<a href="/artists">Artists</a>
-	<a href="/works">Works</a>
-	<a href="/projects">Projects</a>
-	<a href="/pages">Pages</a>
-</nav>
+<Menu />
 
 <main>
 	{@render children()}
 </main>
 
 <style lang="scss">
-	nav {
-		display: flex;
-		gap: 1rem;
-		padding: 1rem;
-		border-bottom: 1px solid #ccc;
-	}
-
-	nav a {
-		text-decoration: none;
-		color: inherit;
-	}
-
-	nav a:hover {
-		text-decoration: underline;
-	}
-
 	main {
-		padding: 1rem;
+		padding: var(--spacing-lg);
 	}
 </style>
