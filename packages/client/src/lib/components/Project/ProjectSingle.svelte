@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { urlFor } from '$lib/modules/sanity';
+	import { MediaSlideshow } from '$lib/components/MediaSlideshow';
 	import type { ExpandedProject } from '$lib/types';
 
 	let { project }: { project: ExpandedProject } = $props();
@@ -56,75 +56,14 @@
 	{#if project.slideshow && project.slideshow.length > 0}
 		<div class="slideshow">
 			<h2>Slideshow</h2>
-			{#each project.slideshow as item}
-				{#if item._type === 'imageMedia' && item.image}
-					<figure>
-						<img src={urlFor(item.image).width(800).url()} alt={item.caption || ''} />
-						{#if item.caption}
-							<figcaption>{item.caption}</figcaption>
-						{/if}
-					</figure>
-				{:else if item._type === 'videoMedia' && item.file?.asset}
-					<figure>
-						<video controls>
-							<source src={item.file.asset.url} />
-						</video>
-						{#if item.caption}
-							<figcaption>{item.caption}</figcaption>
-						{/if}
-					</figure>
-				{:else if item._type === 'audioMedia' && item.file?.asset}
-					<figure>
-						<audio controls>
-							<source src={item.file.asset.url} />
-						</audio>
-						{#if item.caption}
-							<figcaption>{item.caption}</figcaption>
-						{/if}
-					</figure>
-				{:else if item._type === 'embedMedia' && item.url}
-					<figure>
-						<a href={item.url} target="_blank" rel="noopener noreferrer">{item.url}</a>
-						{#if item.caption}
-							<figcaption>{item.caption}</figcaption>
-						{/if}
-					</figure>
-				{/if}
-			{/each}
+			<MediaSlideshow media={project.slideshow} />
 		</div>
 	{/if}
 
 	{#if project.media && project.media.length > 0}
 		<div class="media">
 			<h2>Media</h2>
-			{#each project.media as item}
-				{#if item._type === 'imageMedia' && item.image}
-					<figure>
-						<img src={urlFor(item.image).width(800).url()} alt={item.caption || ''} />
-						{#if item.caption}
-							<figcaption>{item.caption}</figcaption>
-						{/if}
-					</figure>
-				{:else if item._type === 'videoMedia' && item.file?.asset}
-					<figure>
-						<video controls>
-							<source src={item.file.asset.url} />
-						</video>
-						{#if item.caption}
-							<figcaption>{item.caption}</figcaption>
-						{/if}
-					</figure>
-				{:else if item._type === 'audioMedia' && item.file?.asset}
-					<figure>
-						<audio controls>
-							<source src={item.file.asset.url} />
-						</audio>
-						{#if item.caption}
-							<figcaption>{item.caption}</figcaption>
-						{/if}
-					</figure>
-				{/if}
-			{/each}
+			<MediaSlideshow media={project.media} />
 		</div>
 	{/if}
 

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TestLogo from './graphics/TestLogo.svelte';
+
 	const menuItems = [
 		{ href: '/', label: 'Home' },
 		{ href: '/artists', label: 'Artists' },
@@ -14,7 +16,9 @@
 			<a href={item.href}>{item.label}</a>
 		{/each}
 	</div>
-	<div class="menu-trigger"></div>
+	<div class="menu-trigger">
+		<TestLogo />
+	</div>
 </nav>
 
 <style lang="scss">

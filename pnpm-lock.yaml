@@ -68,6 +68,10 @@ importers:
         version: 7.3.1(@types/node@20.19.30)(jiti@2.6.1)(sass-embedded@1.97.2)(sass@1.97.2)(yaml@2.8.2)
 
   packages/client:
+    dependencies:
+      swiper:
+        specifier: ^11.2.6
+        version: 11.2.10
     devDependencies:
       '@eslint/compat':
         specifier: ^2.0.1
@@ -5172,6 +5176,10 @@ packages:
   svelte@5.47.1:
     resolution: {integrity: sha512-MhSWfWEpG5T57z0Oyfk9D1GhAz/KTZKZZlWtGEsy9zNk2fafpuU7sJQlXNSA8HtvwKxVC9XlDyl5YovXUXjjHA==}
     engines: {node: '>=18'}
+
+  swiper@11.2.10:
+    resolution: {integrity: sha512-RMeVUUjTQH+6N3ckimK93oxz6Sn5la4aDlgPzB+rBrG/smPdCTicXyhxa+woIpopz+jewEloiEE3lKo1h9w2YQ==}
+    engines: {node: '>= 4.7.0'}
 
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
@@ -11453,6 +11461,8 @@ snapshots:
       locate-character: 3.0.0
       magic-string: 0.30.21
       zimmerframe: 1.1.4
+
+  swiper@11.2.10: {}
 
   symbol-tree@3.2.4: {}
 

@@ -1,11 +1,15 @@
 <script lang="ts">
 	import '$lib/modules/styles/global.scss';
 	import Menu from '$lib/components/Menu.svelte';
+	import NodeInfo from '$lib/components/NodeInfo.svelte';
+	import type { LayoutData } from './$types';
+	import type { Snippet } from 'svelte';
 
-	let { children } = $props();
+	let { children, data }: { children: Snippet; data: LayoutData } = $props();
 </script>
 
 <Menu />
+<NodeInfo nodes={data.nodes} centroid={data.centroid} />
 
 <main>
 	{@render children()}
