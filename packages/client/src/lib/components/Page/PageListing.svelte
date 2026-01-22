@@ -14,7 +14,7 @@
 			{/each}
 		</ul>
 	{:else}
-		<p>No pages found.</p>
+		No pages found
 	{/if}
 </div>
 

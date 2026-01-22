@@ -1,0 +1,9 @@
+@font-face {
+	font-family: 'gc16 Mono';
+	src:
+		url('gc16-Mono.woff2') format('woff2'),
+		url('gc16-Mono.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}

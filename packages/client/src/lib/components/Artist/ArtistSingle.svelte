@@ -73,6 +73,12 @@
 </article>
 
 <style lang="scss">
+	article {
+		width: 70ch;
+		max-width: 95%;
+		margin-inline: auto;
+		padding-top: 10em;
+	}
 	.related {
 		margin-top: var(--spacing-xl);
 

@@ -19,7 +19,7 @@
 			{/each}
 		</ul>
 	{:else}
-		<p>No works found.</p>
+		No works found
 	{/if}
 </div>
 

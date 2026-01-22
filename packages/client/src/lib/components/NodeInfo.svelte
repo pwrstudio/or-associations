@@ -17,32 +17,53 @@
 		centroid: MeetingPointData | null;
 	} = $props();
 
-	// Clock state - map from timezone to time string
+	// Clock state - map from node id to time string
 	let clocks = $state<Map<string, string>>(new Map());
 
-	function getTimeForTimezone(timezone: string): string {
-		try {
-			const formatter = new Intl.DateTimeFormat('en-GB', {
-				timeZone: timezone,
-				hour: '2-digit',
-				minute: '2-digit',
-				second: '2-digit',
-				hour12: false
-			});
-			return formatter.format(new Date());
-		} catch {
-			return '--:--:--';
+	function getTimeFromLongitude(lng: number): string {
+		// Calculate approximate UTC offset from longitude (15° per hour)
+		const offsetHours = lng / 15;
+		const now = new Date();
+		const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+		const localTime = new Date(utc + offsetHours * 3600000);
+
+		const hours = String(localTime.getUTCHours()).padStart(2, '0');
+		const minutes = String(localTime.getUTCMinutes()).padStart(2, '0');
+		const seconds = String(localTime.getUTCSeconds()).padStart(2, '0');
+		return `${hours}:${minutes}:${seconds}`;
+	}
+
+	function getNodeTime(node: NodeData): string {
+		// First try to use the stored timezone
+		if (node.timezone) {
+			try {
+				const formatter = new Intl.DateTimeFormat('en-GB', {
+					timeZone: node.timezone,
+					hour: '2-digit',
+					minute: '2-digit',
+					second: '2-digit',
+					hour12: false
+				});
+				return formatter.format(new Date());
+			} catch {
+				// Invalid timezone, fall through to longitude calculation
+			}
 		}
+
+		// Fall back to calculating from longitude
+		if (node.geopoint?.lng !== undefined) {
+			return getTimeFromLongitude(node.geopoint.lng);
+		}
+
+		return '--:--:--';
 	}
 
 	function updateClocks() {
 		const newClocks = new Map<string, string>();
-		const seenTimezones = new Set<string>();
 
 		for (const node of nodes) {
-			if (node.timezone && !seenTimezones.has(node.timezone)) {
-				seenTimezones.add(node.timezone);
-				newClocks.set(node.timezone, getTimeForTimezone(node.timezone));
+			if (node._id) {
+				newClocks.set(node._id, getNodeTime(node));
 			}
 		}
 		clocks = newClocks;
@@ -72,9 +93,7 @@
 						<span class="coords">
 							{formatCoord(node.geopoint?.lat, true)}, {formatCoord(node.geopoint?.lng, false)}
 						</span>
-						<span class="time"
-							>{node.timezone ? clocks.get(node.timezone) || '--:--:--' : '--:--:--'}</span
-						>
+						<span class="time">{node._id ? clocks.get(node._id) || '--:--:--' : '--:--:--'}</span>
 					</li>
 				{/each}
 			</ul>
@@ -98,11 +117,12 @@
 <style lang="scss">
 	.node-info {
 		position: fixed;
-		top: var(--spacing-md, 1rem);
-		left: var(--spacing-md, 1rem);
-		z-index: 10;
-		font-size: 10px;
+		top: 40px;
+		left: 40px;
+		z-index: 100;
+		font-size: 12px;
 		font-family: var(--font-family-mono, monospace);
+		mix-blend-mode: difference;
 	}
 
 	section {
@@ -111,7 +131,7 @@
 
 	h2 {
 		margin: 0 0 var(--spacing-xs, 0.25rem);
-		font-size: 10px;
+		font-size: 12px;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 	}
@@ -135,7 +155,6 @@
 
 		.distances {
 			margin: var(--spacing-xs, 0.25rem) 0 0;
-			opacity: 0.7;
 		}
 	}
 

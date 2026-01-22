@@ -14,7 +14,7 @@
 			{/each}
 		</ul>
 	{:else}
-		<p>No artists found.</p>
+		No artists found
 	{/if}
 </div>
 

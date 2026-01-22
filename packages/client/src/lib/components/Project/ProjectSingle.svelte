@@ -82,6 +82,9 @@
 </article>
 
 <style lang="scss">
+	article {
+		width: 70ch;
+	}
 	.slideshow,
 	.media {
 		display: flex;

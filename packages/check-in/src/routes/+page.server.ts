@@ -22,9 +22,6 @@ export const actions: Actions = {
 			throw redirect(302, '/login');
 		}
 
-		const formData = await request.formData();
-		const clientTimezone = formData.get('timezone') as string;
-
 		const ip = getClientAddress();
 		const geo = await getLocationFromIp(ip);
 
@@ -41,7 +38,7 @@ export const actions: Actions = {
 			city: geo.city,
 			region: geo.region,
 			country: geo.country,
-			timezone: clientTimezone || geo.timezone || 'Unknown',
+			timezone: geo.timezone,
 			checkedInAt: new Date().toISOString()
 		};
 
@@ -57,7 +54,7 @@ export const actions: Actions = {
 			location: {
 				city: geo.city,
 				country: geo.country,
-				timezone: clientTimezone || geo.timezone
+				timezone: geo.timezone
 			},
 			checkedInAt: nodeData.checkedInAt
 		};

@@ -19,7 +19,7 @@
 			{/each}
 		</ul>
 	{:else}
-		<p>No projects found.</p>
+		No projects found
 	{/if}
 </div>
 

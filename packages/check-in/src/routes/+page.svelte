@@ -4,11 +4,6 @@
 	let { data, form } = $props();
 
 	let loading = $state(false);
-	let timezone = $state('');
-
-	$effect(() => {
-		timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	});
 
 	function formatDate(isoString: string): string {
 		return new Date(isoString).toLocaleString();
@@ -36,7 +31,6 @@
 				<p class="time">{formatDate(form.checkedInAt)}</p>
 			{/if}
 			<form method="POST" action="?/checkin" use:enhance>
-				<input type="hidden" name="timezone" value={timezone} />
 				<button type="submit" class="checkin-button again">Check In Again</button>
 			</form>
 		</div>
@@ -71,7 +65,6 @@
 				};
 			}}
 		>
-			<input type="hidden" name="timezone" value={timezone} />
 			<button type="submit" class="checkin-button" disabled={loading}>
 				{#if loading}
 					Checking in...
