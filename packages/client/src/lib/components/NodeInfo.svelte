@@ -117,8 +117,8 @@
 <style lang="scss">
 	.node-info {
 		position: fixed;
-		top: 40px;
-		left: 40px;
+		top: 10px;
+		left: 10px;
 		z-index: 100;
 		font-size: 12px;
 		font-family: var(--font-family-mono, monospace);

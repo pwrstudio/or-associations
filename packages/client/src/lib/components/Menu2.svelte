@@ -96,6 +96,7 @@
 		transform: translate(-50%, -50%);
 		z-index: var(--z-index-menu);
 		user-select: none;
+		mix-blend-mode: difference;
 
 		&.is-open {
 			.menu-content {
