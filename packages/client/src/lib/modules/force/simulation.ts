@@ -6,6 +6,7 @@ import type {
 	RenderState,
 	EdgeRenderState,
 	EdgeAnimation,
+	NodeAnimation,
 	EasingFunction,
 	NodeArrays,
 	EdgeArrays
@@ -63,6 +64,13 @@ export interface ForceConfig {
 	collisionPadding: number;
 	radialMinDistance: number;
 	radialStrength: number;
+	// Viewport bounds (in SVG coordinates)
+	boundsMinX?: number;
+	boundsMaxX?: number;
+	boundsMinY?: number;
+	boundsMaxY?: number;
+	boundsPadding?: number;
+	boundsStrength?: number;
 }
 
 export interface Simulation {
@@ -99,6 +107,16 @@ export interface Simulation {
 			direction?: 'draw' | 'retract';
 			easing?: EasingFunction;
 			onAllComplete?: () => void;
+		}
+	) => void;
+	animateNodeTo: (
+		nodeId: string,
+		targetX: number,
+		targetY: number,
+		options?: {
+			duration?: number;
+			easing?: EasingFunction;
+			onComplete?: () => void;
 		}
 	) => void;
 	getEdgeProgress: (edgeId: string) => number;
@@ -222,6 +240,7 @@ export function createSimulation(initialConfig: Partial<SimulationConfig> = {}):
 
 	// Animation state
 	const edgeAnimations = new Map<string, EdgeAnimation>();
+	const nodeAnimations = new Map<string, NodeAnimation>();
 
 	// Geometry cache
 	const geometryCache = new Map<
@@ -404,7 +423,42 @@ export function createSimulation(initialConfig: Partial<SimulationConfig> = {}):
 			}
 		}
 
-		// === PASS 4: Apply velocities and compute movement ===
+		// === PASS 4: Bounds force (keep nodes in viewport) ===
+		const {
+			boundsMinX,
+			boundsMaxX,
+			boundsMinY,
+			boundsMaxY,
+			boundsPadding = 10,
+			boundsStrength = 1
+		} = forceConfig;
+
+		if (
+			boundsMinX !== undefined &&
+			boundsMaxX !== undefined &&
+			boundsMinY !== undefined &&
+			boundsMaxY !== undefined
+		) {
+			const boundsK = boundsStrength * alpha;
+			for (let i = 0; i < n; i++) {
+				const f = flags[i];
+				if (f & (NODE_FLAG_FIXED | NODE_FLAG_DRAGGING)) continue;
+
+				const r = radius[i] + boundsPadding;
+				const minX = boundsMinX + r;
+				const maxX = boundsMaxX - r;
+				const minY = boundsMinY + r;
+				const maxY = boundsMaxY - r;
+
+				if (x[i] < minX) vx[i] += (minX - x[i]) * boundsK;
+				else if (x[i] > maxX) vx[i] += (maxX - x[i]) * boundsK;
+
+				if (y[i] < minY) vy[i] += (minY - y[i]) * boundsK;
+				else if (y[i] > maxY) vy[i] += (maxY - y[i]) * boundsK;
+			}
+		}
+
+		// === PASS 5: Apply velocities, clamp to bounds, compute movement ===
 		for (let i = 0; i < n; i++) {
 			const f = flags[i];
 			if (f & (NODE_FLAG_FIXED | NODE_FLAG_DRAGGING)) {
@@ -423,6 +477,36 @@ export function createSimulation(initialConfig: Partial<SimulationConfig> = {}):
 
 			x[i] += vx[i];
 			y[i] += vy[i];
+
+			// Hard clamp to bounds (prevents any overflow)
+			if (
+				boundsMinX !== undefined &&
+				boundsMaxX !== undefined &&
+				boundsMinY !== undefined &&
+				boundsMaxY !== undefined
+			) {
+				const r = radius[i] + boundsPadding;
+				const minX = boundsMinX + r;
+				const maxX = boundsMaxX - r;
+				const minY = boundsMinY + r;
+				const maxY = boundsMaxY - r;
+
+				if (x[i] < minX) {
+					x[i] = minX;
+					vx[i] = 0;
+				} else if (x[i] > maxX) {
+					x[i] = maxX;
+					vx[i] = 0;
+				}
+
+				if (y[i] < minY) {
+					y[i] = minY;
+					vy[i] = 0;
+				} else if (y[i] > maxY) {
+					y[i] = maxY;
+					vy[i] = 0;
+				}
+			}
 		}
 
 		return maxMovement;
@@ -612,8 +696,41 @@ export function createSimulation(initialConfig: Partial<SimulationConfig> = {}):
 		}
 	}
 
+	function processNodeAnimations() {
+		if (nodeAnimations.size === 0) return;
+
+		const now = performance.now();
+
+		for (const [nodeId, anim] of nodeAnimations) {
+			const idx = nodeIdToIdx.get(nodeId);
+			if (idx === undefined) {
+				nodeAnimations.delete(nodeId);
+				continue;
+			}
+
+			const elapsed = now - anim.startTime;
+			if (elapsed < 0) continue; // Animation hasn't started yet
+
+			const rawProgress = Math.min(elapsed / anim.duration, 1);
+			const easedProgress = anim.easing(rawProgress);
+
+			nodes.x[idx] = anim.startX + (anim.targetX - anim.startX) * easedProgress;
+			nodes.y[idx] = anim.startY + (anim.targetY - anim.startY) * easedProgress;
+
+			if (rawProgress >= 1) {
+				anim.onComplete?.();
+				nodeAnimations.delete(nodeId);
+			}
+		}
+
+		isDirty = true;
+	}
+
 	function loop() {
 		if (!running) return;
+
+		// Process node animations first (they override physics)
+		processNodeAnimations();
 
 		const shouldRunPhysics = alpha >= config.alphaMin;
 
@@ -623,7 +740,7 @@ export function createSimulation(initialConfig: Partial<SimulationConfig> = {}):
 
 		notify();
 
-		const hasActiveAnimations = edgeAnimations.size > 0;
+		const hasActiveAnimations = edgeAnimations.size > 0 || nodeAnimations.size > 0;
 
 		if (!shouldRunPhysics && !hasActiveAnimations) {
 			running = false;
@@ -932,6 +1049,31 @@ export function createSimulation(initialConfig: Partial<SimulationConfig> = {}):
 			}
 		},
 
+		animateNodeTo: (nodeId, targetX, targetY, options = {}) => {
+			const { duration = 300, easing = easings.easeOutCubic, onComplete } = options;
+
+			const idx = nodeIdToIdx.get(nodeId);
+			if (idx === undefined) return;
+
+			nodeAnimations.set(nodeId, {
+				nodeId,
+				startX: nodes.x[idx],
+				startY: nodes.y[idx],
+				targetX,
+				targetY,
+				startTime: performance.now(),
+				duration,
+				easing,
+				onComplete
+			});
+
+			isDirty = true;
+			if (!running) {
+				running = true;
+				loop();
+			}
+		},
+
 		getEdgeProgress: (edgeId) => {
 			const anim = edgeAnimations.get(edgeId);
 			if (anim) {
@@ -956,6 +1098,7 @@ export function createSimulation(initialConfig: Partial<SimulationConfig> = {}):
 			edgeIdToIdx.clear();
 			geometryCache.clear();
 			edgeAnimations.clear();
+			nodeAnimations.clear();
 			cachedNodes = [];
 			cachedEdgeStates = [];
 			if (debugEnabled) {

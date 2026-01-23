@@ -22,6 +22,6 @@
 		stroke: var(--color-foreground);
 		stroke-width: 2;
 		stroke-linecap: round;
-		opacity: 0.2;
+		opacity: 0.5;
 	}
 </style>

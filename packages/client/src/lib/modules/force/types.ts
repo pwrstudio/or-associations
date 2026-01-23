@@ -79,6 +79,19 @@ export interface EdgeAnimation {
 	onComplete?: () => void;
 }
 
+// Node animation state (for position transitions)
+export interface NodeAnimation {
+	nodeId: string;
+	startX: number;
+	startY: number;
+	targetX: number;
+	targetY: number;
+	startTime: number;
+	duration: number;
+	easing: (t: number) => number;
+	onComplete?: () => void;
+}
+
 // Node input (without velocity)
 export type ForceNodeInput = Omit<ForceNode, 'vx' | 'vy' | 'dragging'> & {
 	dragging?: boolean;
@@ -136,6 +149,16 @@ export interface PhysicsConfig {
 	retractDuration?: number;
 	/** Stagger for retract animations (ms). Default: 20 */
 	retractStagger?: number;
+
+	// === Staggered Close Animation ===
+	/** Duration for selected item retract (ms). Default: 200 */
+	selectRetractDuration?: number;
+	/** Duration for non-selected items retract (ms). Default: 150 */
+	otherRetractDuration?: number;
+	/** Stagger for non-selected items (ms). Default: 15 */
+	otherRetractStagger?: number;
+	/** Pause before selected item retracts (ms). Default: 50 */
+	selectLingerDelay?: number;
 
 	// === Opening Jitter ===
 	/** Random position offset when opening (px). 0 = no jitter. Default: 30 */

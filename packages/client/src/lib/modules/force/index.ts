@@ -10,6 +10,7 @@ export type {
 	EdgeRenderState,
 	EdgeGeometry,
 	EdgeAnimation,
+	NodeAnimation,
 	EasingFunction,
 	PhysicsConfig
 } from './types';

@@ -29,17 +29,19 @@
 		linkDistance?: number;
 		debug?: boolean;
 		physics?: PhysicsConfig;
+		dragHoldDelay?: number;
+		closeOnItemClick?: boolean;
 	}
 
 	// Default physics configuration
 	const defaultPhysics: Required<PhysicsConfig> = {
-		alpha: 0.3,
+		alpha: 0.2,
 		alphaDecay: 0.03,
-		velocityDecay: 0.3,
-		centerStrength: 0.08,
-		repelStrength: -100,
-		repelDistanceMin: 10,
-		repelDistanceMax: 400,
+		velocityDecay: 0.2,
+		centerStrength: 0.01,
+		repelStrength: 10,
+		repelDistanceMin: 20,
+		repelDistanceMax: 600,
 		linkStrength: 0.4,
 		collisionStrength: 1.5,
 		collisionPadding: 30,
@@ -49,6 +51,10 @@
 		drawStagger: 40,
 		retractDuration: 250,
 		retractStagger: 20,
+		selectRetractDuration: 200,
+		otherRetractDuration: 150,
+		otherRetractStagger: 15,
+		selectLingerDelay: 50,
 		openJitter: 30
 	};
 
@@ -61,7 +67,9 @@
 		height = 600,
 		linkDistance = 180,
 		debug = false,
-		physics = {}
+		physics = {},
+		dragHoldDelay = 100,
+		closeOnItemClick = false
 	}: Props = $props();
 
 	// Merge user physics with defaults
@@ -71,7 +79,11 @@
 	let renderState: RenderState | null = $state(null);
 	let isOpen = $state(false);
 	let svgElement: SVGSVGElement | null = $state(null);
-	let hasDragged = $state(false);
+
+	// Drag state
+	let isDragMode = $state(false);
+	let canDrag = false; // Set to true after hold delay, but drag only starts on move
+	let holdTimer: ReturnType<typeof setTimeout> | null = null;
 
 	const cx = $derived(width / 2);
 	const cy = $derived(height / 2);
@@ -95,7 +107,7 @@
 			renderState = state;
 		});
 
-		// Add center node (fixed)
+		// Add center node (fixed) at center
 		simulation.addNode({
 			id: 'center',
 			x: cx,
@@ -129,7 +141,15 @@
 			});
 		});
 
-		// Configure forces (now built-in to simulation)
+		// Calculate viewport bounds in SVG coordinates
+		const viewportW = window.innerWidth;
+		const viewportH = window.innerHeight;
+		const boundsMinX = cx - viewportW / 2;
+		const boundsMaxX = cx + viewportW / 2;
+		const boundsMinY = cy - viewportH / 2;
+		const boundsMaxY = cy + viewportH / 2;
+
+		// Configure forces
 		simulation.setForceConfig({
 			centerX: cx,
 			centerY: cy,
@@ -142,12 +162,19 @@
 			collisionStrength: p.collisionStrength,
 			collisionPadding: p.collisionPadding,
 			radialMinDistance: centerRadius + p.radialPadding,
-			radialStrength: p.radialStrength
+			radialStrength: p.radialStrength,
+			boundsMinX,
+			boundsMaxX,
+			boundsMinY,
+			boundsMaxY,
+			boundsPadding: 10,
+			boundsStrength: 2
 		});
 
 		return () => {
 			unsub();
 			simulation?.destroy();
+			if (holdTimer) clearTimeout(holdTimer);
 		};
 	});
 
@@ -206,27 +233,63 @@
 		);
 	}
 
-	function handleItemClick(href: string) {
-		handleClose();
-		setTimeout(() => {
+	function handleItemClick(clickedItemId: string, href: string) {
+		if (!isOpen) return;
+
+		if (closeOnItemClick) {
+			// Close menu with staggered animation, then navigate
+			isOpen = false;
+
+			const clickedEdgeId = `edge-${clickedItemId}`;
+			const otherEdgeIds = items
+				.filter((item) => item.id !== clickedItemId)
+				.map((item) => `edge-${item.id}`);
+
+			// Animate non-clicked edges first (fast)
+			simulation?.animateEdges(otherEdgeIds, {
+				duration: p.otherRetractDuration,
+				stagger: p.otherRetractStagger,
+				direction: 'retract'
+			});
+
+			// Calculate when to start clicked edge animation
+			const othersDuration = p.otherRetractDuration + p.otherRetractStagger * otherEdgeIds.length;
+
+			// Animate clicked edge last
+			simulation?.animateEdge(clickedEdgeId, {
+				duration: p.selectRetractDuration,
+				direction: 'retract',
+				delay: othersDuration + p.selectLingerDelay,
+				onComplete: () => {
+					goto(href);
+				}
+			});
+		} else {
+			// Just navigate, keep menu open
 			goto(href);
-		}, 100);
-	}
-
-	function handleCenterClick() {
-		if (!hasDragged) {
-			handleToggle();
 		}
-		hasDragged = false;
 	}
 
-	function handleCenterDragStart() {
-		hasDragged = false;
-		simulation?.dragStart('center');
+	// Center node interaction handlers
+	function handleCenterPointerDown() {
+		canDrag = false;
+
+		// Start hold timer - after delay, user CAN drag (but doesn't start until they move)
+		holdTimer = setTimeout(() => {
+			canDrag = true;
+		}, dragHoldDelay);
 	}
 
-	function handleCenterDragMove(x: number, y: number) {
-		hasDragged = true;
+	function handleCenterPointerMove(x: number, y: number) {
+		// Only start drag mode if hold delay passed and user moves
+		if (canDrag && !isDragMode) {
+			isDragMode = true;
+			simulation?.dragStart('center');
+		}
+
+		if (!isDragMode) return;
+
+		// Clamp to viewport bounds
 		const padding = centerRadius;
 		const viewportW = window.innerWidth;
 		const viewportH = window.innerHeight;
@@ -236,11 +299,33 @@
 		const maxY = cy + viewportH / 2 - padding;
 		const clampedX = Math.max(minX, Math.min(maxX, x));
 		const clampedY = Math.max(minY, Math.min(maxY, y));
+
 		simulation?.dragMove('center', clampedX, clampedY);
+
+		// Update force center to follow
+		simulation?.setForceConfig({
+			centerX: clampedX,
+			centerY: clampedY
+		});
 	}
 
-	function handleCenterDragEnd() {
-		simulation?.dragEnd('center');
+	function handleCenterPointerUp() {
+		// Clear hold timer
+		if (holdTimer) {
+			clearTimeout(holdTimer);
+			holdTimer = null;
+		}
+
+		if (isDragMode) {
+			// End drag mode
+			simulation?.dragEnd('center');
+			isDragMode = false;
+		} else {
+			// Not dragging - it's a click, toggle menu
+			handleToggle();
+		}
+
+		canDrag = false;
 	}
 
 	function isCenter(node: ForceNodeData): boolean {
@@ -250,13 +335,7 @@
 
 <nav class="force-menu" class:is-open={isOpen} aria-label="Main menu">
 	<div class="menu-content">
-		<svg
-			bind:this={svgElement}
-			viewBox="0 0 {width} {height}"
-			{width}
-			{height}
-			class:is-open={isOpen}
-		>
+		<svg bind:this={svgElement} viewBox="0 0 {width} {height}" {width} {height}>
 			{#if isOpen && renderState}
 				{#each renderState.edges as edge (edge.id)}
 					<ForceEdgeComponent
@@ -281,14 +360,16 @@
 							isCenter={nodeIsCenter}
 							visible={true}
 							draggable={nodeIsCenter}
+							filled={nodeIsCenter && isOpen}
+							isDragActive={nodeIsCenter && isDragMode}
 							{svgElement}
-							onDragStart={nodeIsCenter ? handleCenterDragStart : undefined}
-							onDragMove={nodeIsCenter ? handleCenterDragMove : undefined}
-							onDragEnd={nodeIsCenter ? handleCenterDragEnd : undefined}
+							onDragStart={nodeIsCenter ? handleCenterPointerDown : undefined}
+							onDragMove={nodeIsCenter ? handleCenterPointerMove : undefined}
+							onDragEnd={nodeIsCenter ? handleCenterPointerUp : undefined}
 							onClick={nodeIsCenter
-								? handleCenterClick
+								? undefined
 								: href
-									? () => handleItemClick(href)
+									? () => handleItemClick(node.id, href)
 									: undefined}
 						/>
 					{/if}
@@ -307,6 +388,7 @@
 		z-index: var(--z-index-menu);
 		user-select: none;
 		mix-blend-mode: difference;
+		pointer-events: none;
 	}
 
 	.menu-content {
@@ -316,14 +398,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition:
-			width 0.3s ease,
-			height 0.3s ease;
-	}
-
-	.force-menu.is-open .menu-content {
-		width: 600px;
-		height: 600px;
+		pointer-events: none;
 	}
 
 	svg {
@@ -333,10 +408,6 @@
 		transform: translate(-50%, -50%);
 		overflow: visible;
 		pointer-events: none;
-	}
-
-	svg.is-open {
-		pointer-events: auto;
 	}
 
 	svg :global(.force-node) {

@@ -14,6 +14,8 @@
 		isCenter?: boolean;
 		visible?: boolean;
 		draggable?: boolean;
+		filled?: boolean;
+		isDragActive?: boolean;
 		onDragStart?: () => void;
 		onDragMove?: (x: number, y: number) => void;
 		onDragEnd?: () => void;
@@ -30,6 +32,8 @@
 		isCenter = false,
 		visible = true,
 		draggable = false,
+		filled = false,
+		isDragActive = false,
 		onDragStart,
 		onDragMove,
 		onDragEnd,
@@ -99,6 +103,8 @@
 	class:is-center={isCenter}
 	class:is-dragging={isDragging}
 	class:is-visible={visible}
+	class:is-filled={filled}
+	class:is-drag-active={isDragActive}
 	transform="translate({x}, {y})"
 >
 	{#if href && !isCenter}
@@ -132,7 +138,7 @@
 	{/if}
 </g>
 
-<style>
+<style lang="scss">
 	.force-node {
 		cursor: pointer;
 		visibility: hidden;
@@ -156,6 +162,26 @@
 		stroke: var(--color-foreground);
 		stroke-width: 2;
 		outline: none;
+		transition:
+			fill 0.2s ease,
+			stroke-width 0.15s ease;
+	}
+
+	.force-node:hover circle {
+		stroke-width: 4;
+	}
+
+	.force-node.is-drag-active circle {
+		stroke-width: 4;
+		stroke-dasharray: 8 4;
+	}
+
+	.force-node.is-filled circle {
+		fill: var(--color-foreground);
+	}
+
+	.force-node.is-filled text {
+		fill: var(--color-background);
 	}
 
 	.force-node text {
@@ -177,6 +203,6 @@
 	}
 
 	.force-node a:hover text {
-		text-decoration: underline;
+		text-decoration: none;
 	}
 </style>
