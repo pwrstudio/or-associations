@@ -1,8 +1,17 @@
 <script lang="ts">
-	import type { ForceNode } from '$lib/modules/force-graph';
+	/**
+	 * ForceNode - Pure rendering component
+	 * Receives pre-computed position and renders SVG element
+	 * No physics or state computation here
+	 */
 
 	interface Props {
-		node: ForceNode;
+		x: number;
+		y: number;
+		radius: number;
+		label: string;
+		href?: string;
+		isCenter?: boolean;
 		visible?: boolean;
 		draggable?: boolean;
 		onDragStart?: () => void;
@@ -13,7 +22,12 @@
 	}
 
 	let {
-		node,
+		x,
+		y,
+		radius,
+		label,
+		href,
+		isCenter = false,
 		visible = true,
 		draggable = false,
 		onDragStart,
@@ -78,10 +92,6 @@
 			handleClick();
 		}
 	}
-
-	let href = $derived((node.data?.href as string) || undefined);
-	let label = $derived((node.data?.label as string) || '');
-	let isCenter = $derived(node.data?.isCenter as boolean);
 </script>
 
 <g
@@ -89,12 +99,12 @@
 	class:is-center={isCenter}
 	class:is-dragging={isDragging}
 	class:is-visible={visible}
-	transform="translate({node.x}, {node.y})"
+	transform="translate({x}, {y})"
 >
 	{#if href && !isCenter}
 		<a {href}>
 			<circle
-				r={node.radius}
+				r={radius}
 				onpointerdown={handlePointerDown}
 				onpointermove={handlePointerMove}
 				onpointerup={handlePointerUp}
@@ -108,7 +118,7 @@
 		</a>
 	{:else}
 		<circle
-			r={node.radius}
+			r={radius}
 			onpointerdown={handlePointerDown}
 			onpointermove={handlePointerMove}
 			onpointerup={handlePointerUp}

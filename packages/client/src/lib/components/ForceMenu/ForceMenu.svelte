@@ -3,21 +3,14 @@
 	import { goto } from '$app/navigation';
 	import {
 		createSimulation,
-		createAnimationController,
-		createCenterForce,
-		createManyBodyForce,
-		createLinkForce,
-		createCollisionForce,
-		createIdleMovementForce,
-		createRadialMinDistanceForce,
-		type SimulationState,
+		enablePerformanceLogging,
 		type Simulation,
-		type AnimationController,
-		type ForceNode as ForceNodeType,
-		type ForceEdge as ForceEdgeType
-	} from '$lib/modules/force-graph';
-	import ForceNode from './ForceNode.svelte';
-	import ForceEdge from './ForceEdge.svelte';
+		type RenderState,
+		type ForceNode as ForceNodeData,
+		type PhysicsConfig
+	} from '$lib/modules/force';
+	import ForceNodeComponent from './ForceNode.svelte';
+	import ForceEdgeComponent from './ForceEdge.svelte';
 
 	interface MenuItem {
 		id: string;
@@ -30,67 +23,76 @@
 		items: MenuItem[];
 		centerLabel?: string;
 		centerRadius?: number;
+		itemRadius?: number;
 		width?: number;
 		height?: number;
 		linkDistance?: number;
+		debug?: boolean;
+		physics?: PhysicsConfig;
 	}
+
+	// Default physics configuration
+	const defaultPhysics: Required<PhysicsConfig> = {
+		alpha: 0.3,
+		alphaDecay: 0.03,
+		velocityDecay: 0.3,
+		centerStrength: 0.08,
+		repelStrength: -100,
+		repelDistanceMin: 10,
+		repelDistanceMax: 400,
+		linkStrength: 0.4,
+		collisionStrength: 1.5,
+		collisionPadding: 30,
+		radialPadding: 70,
+		radialStrength: 1.0,
+		drawDuration: 350,
+		drawStagger: 40,
+		retractDuration: 250,
+		retractStagger: 20,
+		openJitter: 30
+	};
 
 	let {
 		items,
 		centerLabel = 'or',
 		centerRadius = 75,
+		itemRadius = 55,
 		width = 600,
 		height = 600,
-		linkDistance = 180
+		linkDistance = 180,
+		debug = false,
+		physics = {}
 	}: Props = $props();
 
+	// Merge user physics with defaults
+	const p = $derived({ ...defaultPhysics, ...physics });
+
 	let simulation: Simulation | null = $state(null);
-	let animController: AnimationController | null = $state(null);
-	let simState: SimulationState | null = $state(null);
-	let edgeProgress = $state<Map<string, number>>(new Map());
+	let renderState: RenderState | null = $state(null);
 	let isOpen = $state(false);
 	let svgElement: SVGSVGElement | null = $state(null);
-	let isDragging = $state(false);
 	let hasDragged = $state(false);
 
-	// Derived state for rendering
-	function getNodes(): ForceNodeType[] {
-		return simState ? Array.from(simState.nodes.values()) : [];
-	}
-	function getEdges(): ForceEdgeType[] {
-		return simState ? Array.from(simState.edges.values()) : [];
-	}
-	let nodes = $derived(getNodes());
-	let edges = $derived(getEdges());
-	let cx = $derived(width / 2);
-	let cy = $derived(height / 2);
+	const cx = $derived(width / 2);
+	const cy = $derived(height / 2);
 
 	onMount(() => {
-		// Create simulation - high damping for stability
+		if (debug) {
+			enablePerformanceLogging(true);
+			console.log('[ForceMenu] Physics config:', p);
+		}
+
+		// Create simulation
 		simulation = createSimulation({
 			width,
 			height,
-			alpha: 0.3,
-			alphaDecay: 0.05,
-			velocityDecay: 0.5
+			alpha: p.alpha,
+			alphaDecay: p.alphaDecay,
+			velocityDecay: p.velocityDecay
 		});
 
-		// Create animation controller
-		animController = createAnimationController();
-
-		// Subscribe to simulation updates
-		const unsubSim = simulation.subscribe((state) => {
-			simState = state;
-		});
-
-		// Subscribe to animation updates
-		const unsubAnim = animController.subscribe(() => {
-			// Update edge progress from animation controller
-			const newProgress = new Map<string, number>();
-			edges.forEach((edge) => {
-				newProgress.set(edge.id, animController!.getProgress(edge.id));
-			});
-			edgeProgress = newProgress;
+		const unsub = simulation.subscribe((state) => {
+			renderState = state;
 		});
 
 		// Add center node (fixed)
@@ -107,7 +109,7 @@
 		// Add menu item nodes
 		items.forEach((item, i) => {
 			const angle = (i / items.length) * Math.PI * 2 - Math.PI / 2;
-			const radius = item.radius || 55;
+			const radius = item.radius || itemRadius;
 
 			simulation!.addNode({
 				id: item.id,
@@ -119,7 +121,6 @@
 				data: { label: item.label, href: item.href }
 			});
 
-			// Add edge from center
 			simulation!.addEdge({
 				id: `edge-${item.id}`,
 				source: 'center',
@@ -128,28 +129,25 @@
 			});
 		});
 
-		// Add forces - tuned for stability
-		simulation.addForce('center', createCenterForce(cx, cy, 0.1));
-		simulation.addForce('repel', createManyBodyForce(-50, 10, 250));
-		simulation.addForce('links', createLinkForce(linkDistance, 0.8));
-		simulation.addForce(
-			'collision',
-			createCollisionForce((n) => n.radius, 1, 20)
-		);
-		// Keep items at minimum distance from center
-		const minDistFromCenter = centerRadius + 60; // center radius + item radius + padding
-		simulation.addForce('radial', createRadialMinDistanceForce(cx, cy, minDistFromCenter, 1));
-		// Very subtle idle movement
-		simulation.addForce('idle', createIdleMovementForce(0.001, 0.2, 0.0002));
-
-		// Don't start simulation - only run when menu is open
-		// simulation.start();
+		// Configure forces (now built-in to simulation)
+		simulation.setForceConfig({
+			centerX: cx,
+			centerY: cy,
+			centerStrength: p.centerStrength,
+			repelStrength: p.repelStrength,
+			repelDistanceMin2: p.repelDistanceMin * p.repelDistanceMin,
+			repelDistanceMax2: p.repelDistanceMax * p.repelDistanceMax,
+			linkDistance,
+			linkStrength: p.linkStrength,
+			collisionStrength: p.collisionStrength,
+			collisionPadding: p.collisionPadding,
+			radialMinDistance: centerRadius + p.radialPadding,
+			radialStrength: p.radialStrength
+		});
 
 		return () => {
-			unsubSim();
-			unsubAnim();
+			unsub();
 			simulation?.destroy();
-			animController?.destroy();
 		};
 	});
 
@@ -165,14 +163,25 @@
 		if (isOpen) return;
 		isOpen = true;
 
-		// Start simulation and animate lines
-		simulation?.start();
-		simulation?.reheat(0.3);
+		// Apply jitter to node positions for organic movement on open
+		if (p.openJitter > 0 && simulation) {
+			items.forEach((item) => {
+				const node = simulation!.getNode(item.id);
+				if (node && !node.fixed) {
+					const jitterX = (Math.random() - 0.5) * 2 * p.openJitter;
+					const jitterY = (Math.random() - 0.5) * 2 * p.openJitter;
+					simulation!.dragMove(item.id, node.x + jitterX, node.y + jitterY);
+				}
+			});
+		}
 
-		const edgeIds = edges.map((e) => e.id);
-		animController?.drawSequence(edgeIds, {
-			duration: 350,
-			stagger: 40
+		simulation?.start();
+		simulation?.reheat(p.alpha);
+
+		const edgeIds = items.map((item) => `edge-${item.id}`);
+		simulation?.animateEdges(edgeIds, {
+			duration: p.drawDuration,
+			stagger: p.drawStagger
 		});
 	}
 
@@ -180,30 +189,31 @@
 		if (!isOpen) return;
 		isOpen = false;
 
-		// Retract lines
-		animController?.retractAll({
-			duration: 250,
-			stagger: 20
+		const edgeIds = items.map((item) => `edge-${item.id}`);
+		simulation?.animateEdges(edgeIds, {
+			duration: p.retractDuration,
+			stagger: p.retractStagger,
+			direction: 'retract'
 		});
 
-		// Stop simulation after animation completes
-		setTimeout(() => {
-			if (!isOpen) {
-				simulation?.stop();
-			}
-		}, 300);
+		setTimeout(
+			() => {
+				if (!isOpen) {
+					simulation?.stop();
+				}
+			},
+			p.retractDuration + p.retractStagger * items.length
+		);
 	}
 
 	function handleItemClick(href: string) {
 		handleClose();
-		// Navigate after a small delay to let animation start
 		setTimeout(() => {
 			goto(href);
 		}, 100);
 	}
 
 	function handleCenterClick() {
-		// Only toggle if we didn't drag
 		if (!hasDragged) {
 			handleToggle();
 		}
@@ -211,19 +221,15 @@
 	}
 
 	function handleCenterDragStart() {
-		isDragging = true;
 		hasDragged = false;
 		simulation?.dragStart('center');
 	}
 
 	function handleCenterDragMove(x: number, y: number) {
 		hasDragged = true;
-		// Clamp to keep center node on screen (SVG is centered on viewport)
-		// Convert viewport bounds to SVG coordinates
 		const padding = centerRadius;
 		const viewportW = window.innerWidth;
 		const viewportH = window.innerHeight;
-		// SVG center (cx, cy) maps to viewport center
 		const minX = cx - viewportW / 2 + padding;
 		const maxX = cx + viewportW / 2 - padding;
 		const minY = cy - viewportH / 2 + padding;
@@ -234,8 +240,11 @@
 	}
 
 	function handleCenterDragEnd() {
-		isDragging = false;
 		simulation?.dragEnd('center');
+	}
+
+	function isCenter(node: ForceNodeData): boolean {
+		return node.data?.isCenter === true;
 	}
 </script>
 
@@ -248,35 +257,43 @@
 			{height}
 			class:is-open={isOpen}
 		>
-			<!-- Render edges first (behind nodes) -->
-			{#if isOpen}
-				{#each edges as edge (edge.id)}
-					{@const source = simState?.nodes.get(edge.source)}
-					{@const target = simState?.nodes.get(edge.target)}
-					{@const progress = edgeProgress.get(edge.id) ?? 0}
-					{#if source && target}
-						<ForceEdge {source} {target} {progress} curvature={0.3} />
-					{/if}
+			{#if isOpen && renderState}
+				{#each renderState.edges as edge (edge.id)}
+					<ForceEdgeComponent
+						path={edge.geometry.path}
+						dashArray={edge.dashArray}
+						dashOffset={edge.dashOffset}
+					/>
 				{/each}
 			{/if}
 
-			<!-- Render nodes -->
-			{#each nodes as node (node.id)}
-				{@const isCenter = node.data?.isCenter as boolean}
-				{@const href = node.data?.href as string}
-				{#if isCenter || isOpen}
-					<ForceNode
-						{node}
-						visible={true}
-						draggable={isCenter}
-						{svgElement}
-						onDragStart={isCenter ? handleCenterDragStart : undefined}
-						onDragMove={isCenter ? handleCenterDragMove : undefined}
-						onDragEnd={isCenter ? handleCenterDragEnd : undefined}
-						onClick={isCenter ? handleCenterClick : href ? () => handleItemClick(href) : undefined}
-					/>
-				{/if}
-			{/each}
+			{#if renderState}
+				{#each renderState.nodes as node (node.id)}
+					{@const nodeIsCenter = isCenter(node)}
+					{@const href = node.data?.href as string}
+					{#if nodeIsCenter || isOpen}
+						<ForceNodeComponent
+							x={node.x}
+							y={node.y}
+							radius={node.radius}
+							label={node.data?.label as string}
+							{href}
+							isCenter={nodeIsCenter}
+							visible={true}
+							draggable={nodeIsCenter}
+							{svgElement}
+							onDragStart={nodeIsCenter ? handleCenterDragStart : undefined}
+							onDragMove={nodeIsCenter ? handleCenterDragMove : undefined}
+							onDragEnd={nodeIsCenter ? handleCenterDragEnd : undefined}
+							onClick={nodeIsCenter
+								? handleCenterClick
+								: href
+									? () => handleItemClick(href)
+									: undefined}
+						/>
+					{/if}
+				{/each}
+			{/if}
 		</svg>
 	</div>
 </nav>

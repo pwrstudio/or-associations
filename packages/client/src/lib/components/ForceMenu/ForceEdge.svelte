@@ -1,44 +1,20 @@
 <script lang="ts">
-	import {
-		getEdgeToEdgePoints,
-		generateBezierCurve,
-		bezierToSVGPath,
-		getBezierLength,
-		getLineDrawStyles,
-		type ForceNode
-	} from '$lib/modules/force-graph';
+	/**
+	 * ForceEdge - Pure rendering component
+	 * Receives pre-computed path and dash styles, just renders SVG
+	 * No geometry computation here
+	 */
 
 	interface Props {
-		source: ForceNode;
-		target: ForceNode;
-		progress: number;
-		curvature?: number;
+		path: string;
+		dashArray: string;
+		dashOffset: number;
 	}
 
-	let { source, target, progress, curvature = 0.25 }: Props = $props();
-
-	// Calculate path dynamically as nodes move
-	let pathData = $derived.by(() => {
-		const { start, end } = getEdgeToEdgePoints(source, target);
-		const curve = generateBezierCurve(start, end, curvature);
-		return {
-			d: bezierToSVGPath(curve),
-			length: getBezierLength(curve)
-		};
-	});
-
-	// Line drawing animation styles
-	let lineStyles = $derived.by(() => {
-		return getLineDrawStyles(pathData.length, progress, 'forward');
-	});
+	let { path, dashArray, dashOffset }: Props = $props();
 </script>
 
-<path
-	class="force-edge"
-	d={pathData.d}
-	stroke-dasharray={lineStyles.dashArray}
-	stroke-dashoffset={lineStyles.dashOffset}
-/>
+<path class="force-edge" d={path} stroke-dasharray={dashArray} stroke-dashoffset={dashOffset} />
 
 <style>
 	.force-edge {
@@ -46,5 +22,6 @@
 		stroke: var(--color-foreground);
 		stroke-width: 2;
 		stroke-linecap: round;
+		opacity: 0.2;
 	}
 </style>
