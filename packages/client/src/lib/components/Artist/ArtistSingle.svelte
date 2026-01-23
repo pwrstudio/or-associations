@@ -64,7 +64,7 @@
 			<ul>
 				{#each artist.pages as page}
 					<li>
-						<a href="/pages/{page.slug?.current}">{page.title}</a>
+						<a href="/editorial/{page.slug?.current}">{page.title}</a>
 					</li>
 				{/each}
 			</ul>
@@ -77,7 +77,6 @@
 		width: 70ch;
 		max-width: 95%;
 		margin-inline: auto;
-		padding-top: 10em;
 	}
 	.related {
 		margin-top: var(--spacing-xl);

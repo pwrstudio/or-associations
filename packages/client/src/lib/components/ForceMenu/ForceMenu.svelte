@@ -31,6 +31,8 @@
 		physics?: PhysicsConfig;
 		dragHoldDelay?: number;
 		closeOnItemClick?: boolean;
+		/** Initial horizontal position as percentage (0-100). Default: 50 (center) */
+		initialLeft?: number;
 	}
 
 	// Default physics configuration
@@ -69,7 +71,8 @@
 		debug = false,
 		physics = {},
 		dragHoldDelay = 100,
-		closeOnItemClick = false
+		closeOnItemClick = false,
+		initialLeft = 50
 	}: Props = $props();
 
 	// Merge user physics with defaults
@@ -333,7 +336,12 @@
 	}
 </script>
 
-<nav class="force-menu" class:is-open={isOpen} aria-label="Main menu">
+<nav
+	class="force-menu"
+	class:is-open={isOpen}
+	aria-label="Main menu"
+	style="--menu-initial-left: {initialLeft}%"
+>
 	<div class="menu-content">
 		<svg bind:this={svgElement} viewBox="0 0 {width} {height}" {width} {height}>
 			{#if isOpen && renderState}
@@ -383,7 +391,7 @@
 	.force-menu {
 		position: fixed;
 		top: 50%;
-		left: 50%;
+		left: var(--menu-initial-left, 50%);
 		transform: translate(-50%, -50%);
 		z-index: var(--z-index-menu);
 		user-select: none;

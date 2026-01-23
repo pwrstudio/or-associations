@@ -28,7 +28,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-md);
-		font-size: 4em;
-		text-align: center;
+		font-size: 2em;
+		// text-align: center;
 	}
 </style>

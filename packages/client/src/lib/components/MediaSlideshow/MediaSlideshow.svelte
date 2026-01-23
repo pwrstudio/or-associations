@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Swiper from 'swiper';
+	import { Autoplay } from 'swiper/modules';
 	import 'swiper/css';
 	import type { MediaItem } from '$lib/types';
 	import ImageSlide from './ImageSlide.svelte';
@@ -11,10 +12,18 @@
 	interface Props {
 		media: MediaItem[];
 		initialIndex?: number;
+		autoplay?: boolean;
+		autoplayDelay?: number;
 		onSlideChange?: (index: number) => void;
 	}
 
-	let { media, initialIndex = 0, onSlideChange }: Props = $props();
+	let {
+		media,
+		initialIndex = 0,
+		autoplay = false,
+		autoplayDelay = 5000,
+		onSlideChange
+	}: Props = $props();
 
 	let swiperContainer: HTMLDivElement | null = $state(null);
 	let swiper: Swiper | null = $state(null);
@@ -24,10 +33,12 @@
 		if (!swiperContainer) return;
 
 		swiper = new Swiper(swiperContainer, {
+			modules: autoplay ? [Autoplay] : [],
 			loop: loopEnabled,
 			initialSlide: initialIndex,
 			grabCursor: true,
 			keyboard: { enabled: true },
+			autoplay: autoplay ? { delay: autoplayDelay, disableOnInteraction: false } : false,
 			on: {
 				slideChange: (s) => {
 					onSlideChange?.(loopEnabled ? s.realIndex : s.activeIndex);

@@ -242,3 +242,32 @@ export const pageBySlugQuery = `
 		}
 	}
 `;
+
+export const aboutQuery = `
+	*[_type == "about"][0] {
+		_id,
+		title,
+		slug,
+		content
+	}
+`;
+
+export const landingPageQuery = `
+	*[_type == "landingPage"][0] {
+		_id,
+		slideshow[] {
+			_type,
+			_key,
+			caption,
+			image {
+				...,
+				asset->
+			},
+			file {
+				...,
+				asset->
+			},
+			url
+		}
+	}
+`;

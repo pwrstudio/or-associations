@@ -4,7 +4,7 @@ import { visionTool } from '@sanity/vision';
 import { schemaTypes } from './schemaTypes';
 import { deskStructure } from './deskStructure';
 
-const SINGLETON_TYPES = ['settings'];
+const SINGLETON_TYPES = ['settings', 'about', 'landingPage'];
 
 export default defineConfig({
 	name: 'default',

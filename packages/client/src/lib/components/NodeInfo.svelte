@@ -150,7 +150,6 @@
 	.centroid {
 		.coords {
 			margin: 0;
-			font-weight: 600;
 		}
 
 		.distances {

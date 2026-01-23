@@ -100,3 +100,25 @@ export type NodeData = Pick<
 > & {
 	_id: string;
 };
+
+// Portable Text block type
+export interface PortableTextBlock {
+	_type: 'block';
+	_key: string;
+	children?: { _type: string; text: string }[];
+	style?: string;
+	markDefs?: unknown[];
+}
+
+// Singleton types
+export interface About {
+	_id: string;
+	title?: string;
+	slug?: Slug;
+	content?: PortableTextBlock[];
+}
+
+export interface LandingPage {
+	_id: string;
+	slideshow?: MediaItem[];
+}

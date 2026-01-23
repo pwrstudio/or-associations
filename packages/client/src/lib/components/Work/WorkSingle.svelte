@@ -91,10 +91,6 @@
 			opacity: 0.8;
 		}
 
-		.title {
-			font-weight: 600;
-		}
-
 		.year::before {
 			content: '(';
 		}

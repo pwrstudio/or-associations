@@ -13,6 +13,97 @@
  */
 
 // Source: schema.json
+export type LandingPage = {
+	_id: string;
+	_type: 'landingPage';
+	_createdAt: string;
+	_updatedAt: string;
+	_rev: string;
+	slideshow?: Array<
+		| {
+				image?: {
+					asset?: {
+						_ref: string;
+						_type: 'reference';
+						_weak?: boolean;
+						[internalGroqTypeReferenceTo]?: 'sanity.imageAsset';
+					};
+					media?: unknown;
+					hotspot?: SanityImageHotspot;
+					crop?: SanityImageCrop;
+					_type: 'image';
+				};
+				caption?: string;
+				_type: 'imageMedia';
+				_key: string;
+		  }
+		| {
+				file?: {
+					asset?: {
+						_ref: string;
+						_type: 'reference';
+						_weak?: boolean;
+						[internalGroqTypeReferenceTo]?: 'sanity.fileAsset';
+					};
+					media?: unknown;
+					_type: 'file';
+				};
+				caption?: string;
+				_type: 'videoMedia';
+				_key: string;
+		  }
+		| {
+				file?: {
+					asset?: {
+						_ref: string;
+						_type: 'reference';
+						_weak?: boolean;
+						[internalGroqTypeReferenceTo]?: 'sanity.fileAsset';
+					};
+					media?: unknown;
+					_type: 'file';
+				};
+				caption?: string;
+				_type: 'audioMedia';
+				_key: string;
+		  }
+		| {
+				url?: string;
+				caption?: string;
+				_type: 'embedMedia';
+				_key: string;
+		  }
+	>;
+};
+
+export type About = {
+	_id: string;
+	_type: 'about';
+	_createdAt: string;
+	_updatedAt: string;
+	_rev: string;
+	title: string;
+	slug: Slug;
+	content?: Array<{
+		children?: Array<{
+			marks?: Array<string>;
+			text?: string;
+			_type: 'span';
+			_key: string;
+		}>;
+		style?: 'normal' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'blockquote';
+		listItem?: 'bullet' | 'number';
+		markDefs?: Array<{
+			href?: string;
+			_type: 'link';
+			_key: string;
+		}>;
+		level?: number;
+		_type: 'block';
+		_key: string;
+	}>;
+};
+
 export type Settings = {
 	_id: string;
 	_type: 'settings';
@@ -20,7 +111,7 @@ export type Settings = {
 	_updatedAt: string;
 	_rev: string;
 	allowedEmails?: Array<{
-		email?: string;
+		email: string;
 		passwordHash?: string;
 		_key: string;
 	}>;
@@ -46,8 +137,8 @@ export type Page = {
 	_createdAt: string;
 	_updatedAt: string;
 	_rev: string;
-	title?: string;
-	slug?: Slug;
+	title: string;
+	slug: Slug;
 	content?: Array<{
 		children?: Array<{
 			marks?: Array<string>;
@@ -81,8 +172,8 @@ export type Project = {
 	_createdAt: string;
 	_updatedAt: string;
 	_rev: string;
-	title?: string;
-	slug?: Slug;
+	title: string;
+	slug: Slug;
 	category?: string;
 	artists?: Array<{
 		_ref: string;
@@ -233,8 +324,8 @@ export type Work = {
 	_createdAt: string;
 	_updatedAt: string;
 	_rev: string;
-	title?: string;
-	slug?: Slug;
+	title: string;
+	slug: Slug;
 	year?: number;
 	artists?: Array<{
 		_ref: string;
@@ -308,8 +399,8 @@ export type Artist = {
 	_createdAt: string;
 	_updatedAt: string;
 	_rev: string;
-	name?: string;
-	slug?: Slug;
+	name: string;
+	slug: Slug;
 	profileImage?: {
 		asset?: {
 			_ref: string;
@@ -449,7 +540,7 @@ export type Geopoint = {
 
 export type Slug = {
 	_type: 'slug';
-	current?: string;
+	current: string;
 	source?: string;
 };
 
@@ -461,6 +552,8 @@ export type SanityAssetSourceData = {
 };
 
 export type AllSanitySchemaTypes =
+	| LandingPage
+	| About
 	| Settings
 	| Node
 	| Page

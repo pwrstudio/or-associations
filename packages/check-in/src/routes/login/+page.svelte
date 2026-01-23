@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	let { form } = $props();
 
 	let loading = $state(false);
 
-	let isSignUp = $derived($page.url.searchParams.get('mode') === 'signup');
+	let isSignUp = $derived(page.url.searchParams.get('mode') === 'signup');
 </script>
 
 <div class="container">
@@ -127,7 +127,6 @@
 
 		a {
 			color: #000;
-			font-weight: 500;
 		}
 	}
 </style>

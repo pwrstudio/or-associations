@@ -70,7 +70,7 @@
 		if (type === 'artist' && artist) return `${siteUrl}/artists/${artist.slug?.current}`;
 		if (type === 'work' && work) return `${siteUrl}/works/${work.slug?.current}`;
 		if (type === 'project' && project) return `${siteUrl}/projects/${project.slug?.current}`;
-		if (type === 'page' && page) return `${siteUrl}/pages/${page.slug?.current}`;
+		if (type === 'page' && page) return `${siteUrl}/editorial/${page.slug?.current}`;
 		return siteUrl;
 	});
 

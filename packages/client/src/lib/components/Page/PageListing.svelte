@@ -9,7 +9,7 @@
 		<ul>
 			{#each pages as page}
 				<li>
-					<a href="/pages/{page.slug?.current}">{page.title}</a>
+					<a href="/editorial/{page.slug?.current}">{page.title}</a>
 				</li>
 			{/each}
 		</ul>
@@ -23,7 +23,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-md);
-		font-size: 4em;
-		text-align: center;
+		font-size: 2em;
+		// text-align: center;
 	}
 </style>

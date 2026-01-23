@@ -84,6 +84,7 @@
 <style lang="scss">
 	article {
 		width: 70ch;
+		max-width: 100%;
 	}
 	.slideshow,
 	.media {
@@ -91,5 +92,9 @@
 		flex-direction: column;
 		gap: var(--spacing-md);
 		margin-top: var(--spacing-md);
+	}
+
+	.description {
+		max-width: 100%;
 	}
 </style>
