@@ -290,18 +290,30 @@
 			simulation?.dragStart('center');
 		}
 
-		if (!isDragMode) return;
+		if (!isDragMode || !svgElement) return;
 
-		// Clamp to viewport bounds
+		// Convert viewport bounds to SVG coordinates using the transformation matrix
 		const padding = centerRadius;
 		const viewportW = window.innerWidth;
 		const viewportH = window.innerHeight;
-		const minX = cx - viewportW / 2 + padding;
-		const maxX = cx + viewportW / 2 - padding;
-		const minY = cy - viewportH / 2 + padding;
-		const maxY = cy + viewportH / 2 - padding;
-		const clampedX = Math.max(minX, Math.min(maxX, x));
-		const clampedY = Math.max(minY, Math.min(maxY, y));
+
+		const ctm = svgElement.getScreenCTM();
+		if (!ctm) return;
+		const ctmInverse = ctm.inverse();
+
+		// Transform viewport corners (with padding) to SVG coordinate space
+		const svgPoint = svgElement.createSVGPoint();
+
+		svgPoint.x = padding;
+		svgPoint.y = padding;
+		const topLeft = svgPoint.matrixTransform(ctmInverse);
+
+		svgPoint.x = viewportW - padding;
+		svgPoint.y = viewportH - padding;
+		const bottomRight = svgPoint.matrixTransform(ctmInverse);
+
+		const clampedX = Math.max(topLeft.x, Math.min(bottomRight.x, x));
+		const clampedY = Math.max(topLeft.y, Math.min(bottomRight.y, y));
 
 		simulation?.dragMove('center', clampedX, clampedY);
 
