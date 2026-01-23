@@ -12,7 +12,7 @@
 		{ id: 'artists', label: 'Artists', href: '/artists', radius: 55 },
 		{ id: 'works', label: 'Works', href: '/works', radius: 50 },
 		{ id: 'projects', label: 'Projects', href: '/projects', radius: 60 },
-		{ id: 'pages', label: 'Pages', href: '/pages', radius: 50 }
+		{ id: 'editorial', label: 'Editorial', href: '/editorial', radius: 65 }
 	];
 </script>
 

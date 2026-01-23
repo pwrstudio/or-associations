@@ -168,11 +168,11 @@
 	}
 
 	.force-node:hover circle {
-		stroke-width: 4;
+		stroke-width: 3;
 	}
 
 	.force-node.is-drag-active circle {
-		stroke-width: 4;
+		stroke-width: 3;
 		stroke-dasharray: 8 4;
 	}
 

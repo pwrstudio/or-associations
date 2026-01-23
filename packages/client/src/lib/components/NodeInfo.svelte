@@ -120,7 +120,7 @@
 		top: 10px;
 		left: 10px;
 		z-index: 100;
-		font-size: 12px;
+		font-size: 13px;
 		font-family: var(--font-family-mono, monospace);
 		mix-blend-mode: difference;
 	}
@@ -131,7 +131,7 @@
 
 	h2 {
 		margin: 0 0 var(--spacing-xs, 0.25rem);
-		font-size: 12px;
+		font-size: 13px;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 	}
